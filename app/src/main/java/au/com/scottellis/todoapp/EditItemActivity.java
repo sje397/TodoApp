@@ -18,8 +18,12 @@ public class EditItemActivity extends ActionBarActivity {
         setContentView(R.layout.activity_edit_item);
 
         editText = (EditText)findViewById(R.id.editItemText);
-        editText.setText(getIntent().getExtras().getString("itemText"));
-        position = getIntent().getExtras().getInt("position");
+        if(getIntent().getAction().equals("Edit")) {
+            editText.setText(getIntent().getExtras().getString("itemText"));
+            position = getIntent().getExtras().getInt("position");
+        } else {
+            editText.setHint("New Todo");
+        }
     }
 
     @Override

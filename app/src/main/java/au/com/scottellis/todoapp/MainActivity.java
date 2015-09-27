@@ -7,42 +7,59 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import org.apache.commons.io.FileUtils;
+import com.activeandroid.ActiveAndroid;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
+
+import au.com.scottellis.todoapp.model.TodoItem;
+import au.com.scottellis.todoapp.storage.file.FileStorage;
+import au.com.scottellis.todoapp.storage.Storage;
+import au.com.scottellis.todoapp.storage.file.TodoStringConverter;
+import au.com.scottellis.todoapp.storage.sqlite.SQLiteStorage;
 
 public class MainActivity extends ActionBarActivity {
     private static final String SAVE_FILE = "todoItems.txt";
     private static final int EDIT_REQUEST_CODE = 1;
+    private static final int ADD_REQUEST_CODE = 2;
 
-    private ArrayList<String> items;
-    private ArrayAdapter<String> itemAdapter;
+    private Storage<TodoItem> storage;
     private ListView lvItems;
-    private EditText editText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        try {
+            File f = new File("Todo.db");
+            f.delete();
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+
+        ActiveAndroid.initialize(this);
         setContentView(R.layout.activity_main);
 
-        readList();
+        //storage = new FileStorage<>(getFilesDir(), this, new TodoStringConverter());
+        storage = new SQLiteStorage(this);
         lvItems = (ListView)findViewById(R.id.listView);
-        lvItems.setAdapter(itemAdapter);
-        editText = (EditText)findViewById(R.id.editText);
+        lvItems.setAdapter(storage.getAdapter());
+        try {
+            storage.load();
+        } catch(final Exception ex) {
+            showError("Failed to load items", ex);
+        }
 
         lvItems.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                items.remove(position);
-                itemAdapter.notifyDataSetChanged();
-                saveList();
+                try {
+                    storage.deleteItem(position);
+                } catch(final Exception ex) {
+                    showError("Error deleting item", ex);
+                }
                 return true;
             }
         });
@@ -50,33 +67,14 @@ public class MainActivity extends ActionBarActivity {
         lvItems.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                final TodoItem item = storage.getItem(position);
                 Intent i = new Intent(MainActivity.this, EditItemActivity.class);
+                i.setAction("Edit");
                 i.putExtra("position", position);
-                i.putExtra("itemText", items.get(position));
+                i.putExtra("itemText", item.text);
                 startActivityForResult(i, EDIT_REQUEST_CODE);
             }
         });
-    }
-
-    public void readList() {
-        final File dir = getFilesDir();
-        final File file = new File(dir, SAVE_FILE);
-        try {
-            items = new ArrayList<String>(FileUtils.readLines(file));
-        } catch(final IOException ex) {
-            items = new ArrayList<>();
-        }
-        itemAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, items);
-    }
-
-    public void saveList() {
-        final File dir = getFilesDir();
-        final File file = new File(dir, SAVE_FILE);
-        try {
-            FileUtils.writeLines(file, items);
-        } catch(final IOException ex) {
-            Toast.makeText(getApplicationContext(), R.string.save_error, Toast.LENGTH_SHORT).show();
-        }
     }
 
     @Override
@@ -101,21 +99,41 @@ public class MainActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public void onClickAdd(View view) {
-        String item = editText.getText().toString();
-        itemAdapter.add(item);
-        editText.setText("");
-        saveList();
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (resultCode == RESULT_OK && requestCode == EDIT_REQUEST_CODE) {
-            String newText = data.getExtras().getString("newText");
-            int position = data.getExtras().getInt("position");
-            items.set(position, newText);
-            itemAdapter.notifyDataSetChanged();
-            saveList();
+        if (resultCode == RESULT_OK) {
+            if (requestCode == EDIT_REQUEST_CODE) {
+                String newText = data.getExtras().getString("newText");
+                int position = data.getExtras().getInt("position");
+                TodoItem item = storage.getItem(position);
+                item.text = newText;
+                try {
+                    storage.updateItem(item, position);
+                } catch(final Exception ex) {
+                    showError("Error saving item", ex);
+                }
+            } else if (requestCode == ADD_REQUEST_CODE) {
+                String newText = data.getExtras().getString("newText");
+                final TodoItem item = new TodoItem(newText, null, TodoItem.Priority.MED);
+                try {
+                    storage.addItem(item);
+                } catch(final Exception ex) {
+                    showError("Error adding item", ex);
+                }
+            }
         }
+    }
+
+    public void onClickAdd(View view) {
+        Intent i = new Intent(MainActivity.this, EditItemActivity.class);
+        i.setAction("Add");
+        startActivityForResult(i, ADD_REQUEST_CODE);
+    }
+
+    private void showError(final String message, final Throwable throwable) {
+        Toast toast = Toast.makeText(this, message, Toast.LENGTH_SHORT);
+        toast.show();
+
+        throwable.printStackTrace();
     }
 }
