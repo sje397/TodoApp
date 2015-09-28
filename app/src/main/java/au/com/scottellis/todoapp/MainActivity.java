@@ -12,15 +12,13 @@ import android.widget.Toast;
 
 import com.activeandroid.ActiveAndroid;
 
-import java.io.File;
+import java.util.Date;
 
 import au.com.scottellis.todoapp.model.TodoItem;
-import au.com.scottellis.todoapp.storage.file.FileStorage;
 import au.com.scottellis.todoapp.storage.Storage;
-import au.com.scottellis.todoapp.storage.file.TodoStringConverter;
 import au.com.scottellis.todoapp.storage.sqlite.SQLiteStorage;
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends ActionBarActivity implements TodoItemAdapter.DoneButtonListener {
     private static final String SAVE_FILE = "todoItems.txt";
     private static final int EDIT_REQUEST_CODE = 1;
     private static final int ADD_REQUEST_CODE = 2;
@@ -32,18 +30,11 @@ public class MainActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        try {
-            File f = new File("Todo.db");
-            f.delete();
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
-
         ActiveAndroid.initialize(this);
         setContentView(R.layout.activity_main);
 
         //storage = new FileStorage<>(getFilesDir(), this, new TodoStringConverter());
-        storage = new SQLiteStorage(this);
+        storage = new SQLiteStorage(this, this);
         lvItems = (ListView)findViewById(R.id.listView);
         lvItems.setAdapter(storage.getAdapter());
         try {
@@ -51,18 +42,6 @@ public class MainActivity extends ActionBarActivity {
         } catch(final Exception ex) {
             showError("Failed to load items", ex);
         }
-
-        lvItems.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                try {
-                    storage.deleteItem(position);
-                } catch(final Exception ex) {
-                    showError("Error deleting item", ex);
-                }
-                return true;
-            }
-        });
 
         lvItems.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -72,6 +51,10 @@ public class MainActivity extends ActionBarActivity {
                 i.setAction("Edit");
                 i.putExtra("position", position);
                 i.putExtra("itemText", item.text);
+                if (item.deadline != null) {
+                    i.putExtra("deadline", item.deadline.getTime());
+                }
+                i.putExtra("priority", item.priority.toString());
                 startActivityForResult(i, EDIT_REQUEST_CODE);
             }
         });
@@ -103,10 +86,20 @@ public class MainActivity extends ActionBarActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == RESULT_OK) {
             if (requestCode == EDIT_REQUEST_CODE) {
-                String newText = data.getExtras().getString("newText");
                 int position = data.getExtras().getInt("position");
+
+                String newText = data.getExtras().getString("newText");
+                TodoItem.Priority priority = TodoItem.Priority.valueOf(data.getExtras().getString("priority"));
+                Date newDate = null;
+                if(data.getExtras().containsKey("deadline")) {
+                    newDate = new Date(data.getExtras().getLong("deadline"));
+                }
+
                 TodoItem item = storage.getItem(position);
                 item.text = newText;
+                item.priority = priority;
+                item.deadline = newDate;
+
                 try {
                     storage.updateItem(item, position);
                 } catch(final Exception ex) {
@@ -114,7 +107,13 @@ public class MainActivity extends ActionBarActivity {
                 }
             } else if (requestCode == ADD_REQUEST_CODE) {
                 String newText = data.getExtras().getString("newText");
-                final TodoItem item = new TodoItem(newText, null, TodoItem.Priority.MED);
+                TodoItem.Priority priority = TodoItem.Priority.valueOf(data.getExtras().getString("priority"));
+                Date newDate = null;
+                if(data.getExtras().containsKey("deadline")) {
+                    newDate = new Date(data.getExtras().getLong("deadline"));
+                }
+
+                final TodoItem item = new TodoItem(newText, newDate, priority);
                 try {
                     storage.addItem(item);
                 } catch(final Exception ex) {
@@ -135,5 +134,14 @@ public class MainActivity extends ActionBarActivity {
         toast.show();
 
         throwable.printStackTrace();
+    }
+
+    @Override
+    public void doneButtonClicked(int position) {
+        try {
+            storage.deleteItem(position);
+        } catch(final Exception ex) {
+            showError("Error deleting item", ex);
+        }
     }
 }

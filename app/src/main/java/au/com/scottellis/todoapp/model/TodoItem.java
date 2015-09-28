@@ -11,10 +11,10 @@ import java.util.Date;
  */
 @Table(name = "items")
 public class TodoItem extends Model {
-    public static enum Priority {
-        LOW,
-        MED,
-        HI
+    public enum Priority {
+        NOTIMPORTANT,
+        NORMAL,
+        IMPORTANT
     }
 
     @Column(name = "itemText")

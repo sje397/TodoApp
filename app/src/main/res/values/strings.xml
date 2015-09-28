@@ -1,11 +1,19 @@
 <resources>
-    <string name="app_name">TodoApp</string>
-    <string name="hello_world">Hello world!</string>
+    <string name="app_name">Toda!</string>
     <string name="action_settings">Settings</string>
     <string name="add">Add</string>
-    <string name="add_itme">Add a new item&#8230;</string>
-    <string name="save_error">Error saving file</string>
-    <string name="title_activity_edit_item">EditItemActivity</string>
-    <string name="edit_item_promt">Edit Item Below:</string>
+    <string name="title_activity_edit_item">Edit Todo</string>
     <string name="edit_save_item">Save</string>
+    <string name="delBtn">Delete</string>
+    <string name="editBtn">Edit</string>
+    <string name="deadline_checkbox">Has deadline</string>
+    <string name="hi_prio_label">HIGH</string>
+    <string name="med_prio_label">NORMAL</string>
+    <string name="lo_prio_label">LOW</string>
+    <string name="date_row">Date:</string>
+    <string name="time_row">Time:</string>
+    <string name="edit_btn">Edit</string>
+    <string name="prio_spn">Priority</string>
+    <string name="save_btn">Save</string>
+    <string name="cancel_btn">Cancel</string>
 </resources>

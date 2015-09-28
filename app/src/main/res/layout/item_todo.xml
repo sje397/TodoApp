@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:contentDescription="@string/editBtn"
+    android:id="@+id/adapterItem"
+    android:descendantFocusability="blocksDescendants">
+
+    <RelativeLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/topStrip"
+        android:weightSum="1"
+        android:padding="8dp">
+
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="65dp"
+            android:id="@+id/itemText"
+            android:textSize="@dimen/abc_dialog_padding_material"
+            android:singleLine="false"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:clickable="false"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignRight="@+id/doneBtn"
+            android:text="Test"
+            android:gravity="center"
+            android:layout_alignBottom="@+id/doneBtn" />
+
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="65dp"
+            android:id="@+id/doneBtn"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            android:src="@drawable/ic_menu_close_clear_cancel"
+            android:background="@android:color/transparent"/>
+    </RelativeLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:weightSum="1">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:id="@+id/dateText"
+            android:layout_weight="1.06"
+            android:gravity="center_horizontal" />
+    </LinearLayout>
+
+</LinearLayout>

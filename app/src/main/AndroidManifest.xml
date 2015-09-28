@@ -21,7 +21,7 @@
             android:label="@string/title_activity_edit_item" >
         </activity>
 
-        <meta-data android:name="AA_DB_NAME" android:value="TodoDb.db" />
+        <meta-data android:name="AA_DB_NAME" android:value="TodoDatabase.db" />
         <meta-data android:name="AA_DB_VERSION" android:value="1" />
 
     </application>
